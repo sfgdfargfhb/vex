@@ -1,12 +1,17 @@
 # Library imports
 from vex import *
-import old
-#devices set up
+
+# devices set up
 brain=Brain() # screen size: 480 x 240
 controller=Controller()
-# motor_1=Motor(Ports.PORT1)
-# motor_2=Motor(Ports.PORT2)
-# motors=MotorGroup(motor_1,motor_2)
+# drivetrain motors
+motor_left_front=Motor(Ports.PORT1,GearSetting.RATIO_18_1,False)
+motor_left_back=Motor(Ports.PORT2,GearSetting.RATIO_18_1,False)
+motors_left=MotorGroup(motor_left_back,motor_left_front)
+motor_right_front=Motor(Ports.PORT3,GearSetting.RATIO_18_1,True)
+motor_right_back=Motor(Ports.PORT4,GearSetting.RATIO_18_1,True)
+motors_right=MotorGroup(motor_right_back,motor_right_front)
+motor_middle=Motor(Ports.PORT5,GearSetting.RATIO_18_1,False)
 
 def autonomous():
     brain.screen.clear_screen()
