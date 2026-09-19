@@ -1,10 +1,12 @@
 # Library imports
 from vex import *
 
+
 # ===================== Device setup ======================
 
 brain=Brain()  # screen size: 480 x 240
 controller=Controller()
+
 
 # =================== Drivetrain motors ===================
 
@@ -21,6 +23,44 @@ motors_right=MotorGroup(motor_right_back,motor_right_front)
 
 # Middle motor for sideways movement
 motor_middle=Motor(Ports.PORT5,GearSetting.RATIO_18_1,False)
+
+
+# ================= Movement configuration ================
+
+JOYSTICK_DEADZONE=5
+DIRECTION_THRESHOLD=0.414  # tan(22.5°)=0.414, used to snap to cardinal directions
+
+
+def process_movement(forward,strafe):
+    # Remove small joystick movements near the center
+    if abs(forward)<JOYSTICK_DEADZONE:
+        forward=0
+    if abs(strafe)<JOYSTICK_DEADZONE:
+        strafe=0
+    if forward==0 and strafe==0:
+        return 0,0
+
+    # Calculate the overall joystick strength
+    speed=min(100,int((forward**2+strafe**2)**0.5))
+
+    # Snap to cardinal directions
+    if abs(strafe)<abs(forward)*DIRECTION_THRESHOLD:
+        return forward,0
+    if abs(forward)<abs(strafe)*DIRECTION_THRESHOLD:
+        return 0,strafe
+
+    # Snap to diagonal directions
+    if forward>0:
+        forward=speed
+    else:
+        forward=-speed
+    if strafe>0:
+        strafe=speed
+    else:
+        strafe=-speed
+
+    return forward,strafe
+
 
 # ==================== Autonomous code ====================
 
@@ -41,6 +81,13 @@ def user_control():
         forward_speed=controller.axis3.position()  # left joystick, vertical
         turn_speed=controller.axis1.position()     # right joystick, horizontal
         strafe_speed=controller.axis4.position()   # left joystick, horizontal
+
+        # Convert the left joystick to eight-direction movement
+        forward_speed,strafe_speed=process_movement(forward_speed,strafe_speed)
+
+        # Apply a deadzone to turning
+        if abs(turn_speed)<JOYSTICK_DEADZONE:
+            turn_speed=0
 
         # Calculate the speed of left and right motors
         left_speed=forward_speed+turn_speed
@@ -63,7 +110,7 @@ def user_control():
 # ==================== Program startup ====================
 
 # Use during a competition
-# comp = Competition(user_control, autonomous)
+# comp=Competition(user_control,autonomous)
 
 # Use for autonomous testing 
 # autonomous()
